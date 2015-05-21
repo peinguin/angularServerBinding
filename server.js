@@ -23,21 +23,28 @@ var io = require('socket.io')(server)
     this.leave(entry);
     console.log('client', this.id, 'unsubscribe', entry);
   }
-  , subscribe = function() {
-  }
   , change = function(operation, row) {
     var file = row.k
-      , entry = file.replace(ROOT + '/', '')
+      , entry = file
+        .replace(__dirname + '/', '')
+        .replace(/\.json$/, '')
     ;
-    sendfile(entry);
+    sendFile(entry);
   }
   , sendFile = function(entry) {
-    fs.readFile(__dirname + '/' + entry + '.json', function(err, file) {
-      if (err) {
-	throw err;
+    var filename = __dirname + '/' + entry + '.json';
+    fs.stat(filename, function(err, stat) {
+      if(err) {
+        return; // file does not exist more
       }
-      io.to(entry).emit(entry, file);
-      console.log('sended',file, entry);
+      fs.readFile(filename, 'utf8', function(err, file) {
+        if (err) {
+	  throw err;
+        }
+        file = JSON.parse(file);
+        io.to(entry).emit(entry, file);
+        console.log('sended', entry);
+      }.bind(this));
     }.bind(this));
   }
 ;
