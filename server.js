@@ -4,6 +4,7 @@ var express = require('express')
   , server = require('http').Server(app)
   , eventEmitter = new (require('events').EventEmitter)()
 //config
+  , ROOT = __dirname + '/phones/'
   , PORT = 8000
 ;
 
@@ -19,20 +20,16 @@ app.get('/socket.io.js', function (req, res) {
 
 //socket.io
 var io = require('socket.io')(server)
-  , unsubscribe = function(entry) {
-    this.leave(entry);
-    console.log('client', this.id, 'unsubscribe', entry);
-  }
   , change = function(operation, row) {
     var file = row.k
       , entry = file
-        .replace(__dirname + '/', '')
+        .replace(ROOT, '')
         .replace(/\.json$/, '')
     ;
     sendFile(entry);
   }
   , sendFile = function(entry) {
-    var filename = __dirname + '/' + entry + '.json';
+    var filename = ROOT + entry + '.json';
     fs.stat(filename, function(err, stat) {
       if(err) {
         return; // file does not exist more
@@ -50,16 +47,44 @@ var io = require('socket.io')(server)
 ;
 
 io.on('connection', function(client) {
+  var rooms = []
+    , unsubscribe = function(entry) {
+      if (!entry) {
+	while (rooms.length > 0) {
+	  unsubscribe.call(this, rooms.pop());
+	}
+	return;
+      }
+      this.leave(entry);
+      console.log('client', this.id, 'unsubscribe', entry);
+    }
+  ;
   console.log('New client connected', client.id, client.conn.remoteAddress);
  
   client.on('subscribe', function(entry) {
-    unsubscribe.call(this, entry);
+    unsubscribe.call(this);
     this.join(entry);
+    rooms.push(entry);
     sendFile(entry);
     console.log('client', this.id, 'subscribed', entry);
   });
 
   client.on('unsubscribe', unsubscribe);
+
+  client.on('update', function(entry, data) {
+    var filename = ROOT + entry + '.json';
+    fs.stat(filename, function(err, stat) {
+      if(err) {
+        return; // file does not exist more
+      }
+      fs.writeFile(filename, JSON.stringify(data), function(err) {
+        if (err) {
+	  throw err;
+        }
+        console.log('File', entry, 'saved');
+      }.bind(this));
+    }.bind(this));
+  });
 });
 
 eventEmitter.on('insert', change.bind(null, 'insert'));
@@ -72,7 +97,7 @@ require('dbmon').channel({
   driver: 'filesystem',
   driverOpts: {
     filesystem: {
-      root: __dirname + '/phones'
+      root: ROOT
     }
   },
   method: 'inotifywait',

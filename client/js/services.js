@@ -19,26 +19,31 @@ phonecatServices.factory('Phone', function(){
     if (!socket.connected) {
       return  this.wait('all', arguments);
     }
-    var query = 'phones/all';
+    var query = 'all';
     socket.on(query, cb);
     events.push(query);
     socket.emit('subscribe', query);
   };
   Resource.one = function(id, cb) {
     if (!socket.connected) {
-      return  this.wait('all', arguments);
+      return  this.wait('one', arguments);
     }
-    var query = 'phones/' + id
+    var query = id;
     socket.on(query, cb);
     events.push(query);
     socket.emit('subscribe', query);
-    return defer.promise;
   };
   Resource.stop = function() {
     while(events.length > 0) {
       socket.removeAllListeners(events.pop());
     }
   };
+  Resource.updateAll = function(photos) {
+    socket.emit('update', 'all', photos);
+  };
+  Resource.updateOne = function(photo) {
+    socket.emit('update', photo.id, photo);
+  }
   return Resource;
 });
 

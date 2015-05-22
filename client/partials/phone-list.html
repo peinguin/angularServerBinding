@@ -19,7 +19,7 @@
 	    class="thumbnail phone-listing">
           <a href="#/phones/{{phone.id}}" class="thumb"><img ng-src="{{phone.imageUrl}}"></a>
           <a href="#/phones/{{phone.id}}">{{phone.name}}</a>
-          <p>{{phone.snippet}}</p>
+          <p><textarea ng-model="phone.snippet"></textarea></p>
         </li>
       </ul>
 

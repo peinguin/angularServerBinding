@@ -5,15 +5,18 @@
        ng-class="{active: mainImageUrl==img}">
 </div>
 
-<h1>{{phone.name}}</h1>
+<div class="phone-title-description">
+  <a href="#/phones">Back</a>
+  <h1>{{phone.name}}</h1>
 
-<p>{{phone.description}}</p>
-
-<ul class="phone-thumbs">
-  <li ng-repeat="img in phone.images">
-    <img ng-src="{{img}}" ng-click="setImage(img)">
-  </li>
-</ul>
+  <p><textarea class="full-phone-description" ng-model="phone.description"></textarea></p>
+  
+  <ul class="phone-thumbs">
+    <li ng-repeat="img in phone.images">
+      <img ng-src="{{img}}" ng-click="setImage(img)">
+    </li>
+  </ul>
+</div>
 
 <ul class="specs">
   <li>
